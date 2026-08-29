@@ -23,7 +23,13 @@ Then press **Run Live Demo**. A scripted battle demonstrates viewers joining tea
 
 ## Screenshots
 
-Release previews are stored in `public/screenshots/`.
+### Desktop
+
+![TikGame Engine Demo desktop battle arena](public/screenshots/live-battle-arena-desktop.webp)
+
+### Mobile
+
+![TikGame Engine Demo mobile battle arena](public/screenshots/live-battle-arena-mobile.webp)
 
 ## What it demonstrates
 
