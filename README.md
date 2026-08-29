@@ -10,6 +10,8 @@ Comments choose teams, likes charge energy, follows activate shields, and simula
 
 > **This project uses simulated LIVE events and does not require or connect to the TikTok API.**
 
+[▶ Open Live Demo](https://remb82-lab.github.io/TikGame-Engine-Demo/)
+
 ## Live Demo
 
 Clone the repository and start the showcase with one command flow:
