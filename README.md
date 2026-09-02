@@ -1,16 +1,27 @@
+<div align="center">
+
 # TikGame Engine Demo
 
-> **Turn LIVE audience events into gameplay.**
+### Turn LIVE audience events into gameplay.
 
-TikGame Engine Demo is a small, independent public showcase of one architectural idea:
+[![Live Demo](https://img.shields.io/badge/▶_Live_Demo-Open-22c55e?style=for-the-badge)](https://remb82-lab.github.io/TikGame-Engine-Demo/)
+[![CI](https://github.com/remb82-lab/TikGame-Engine-Demo/actions/workflows/ci.yml/badge.svg)](https://github.com/remb82-lab/TikGame-Engine-Demo/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/remb82-lab/TikGame-Engine-Demo?style=social)](https://github.com/remb82-lab/TikGame-Engine-Demo/stargazers)
 
 **EVENT → ENGINE → GAME**
+
+</div>
+
+TikGame Engine Demo is a small, independent public showcase of one architectural idea: audience events become game mechanics in real time.
 
 Comments choose teams, likes charge energy, follows activate shields, and simulated gifts trigger attacks inside a polished 9:16 streaming overlay.
 
 > **This project uses simulated LIVE events and does not require or connect to the TikTok API.**
 
-[▶ Open Live Demo](https://remb82-lab.github.io/TikGame-Engine-Demo/)
+![TikGame Engine Demo desktop battle arena](public/screenshots/live-battle-arena-desktop.webp)
+
+**Like the concept? Give the repository a ⭐ — it helps more people discover the demo.**
 
 ## Live Demo
 
@@ -24,10 +35,6 @@ npm run dev
 Then press **Run Live Demo**. A scripted battle demonstrates viewers joining teams, charging energy, triggering shields, launching attacks and reaching a winner state.
 
 ## Screenshots
-
-### Desktop
-
-![TikGame Engine Demo desktop battle arena](public/screenshots/live-battle-arena-desktop.webp)
 
 ### Mobile
 
@@ -159,6 +166,12 @@ This v1 demo intentionally does **not** include Visual Logic Compiler, Economy s
 ## Disclaimer
 
 This project is an independent technical demo. It is not affiliated with, endorsed by, or sponsored by TikTok or ByteDance. “TikTok” is a trademark of its respective owner. The application uses simulated LIVE-style events only and does not connect to TikTok APIs.
+
+## Support the project
+
+If this demo or the open experiments around it are useful to you, you can support future work via Binance Pay.
+
+[![Support](https://img.shields.io/badge/Binance_Pay-Support-F0B90B?style=for-the-badge&logo=binance&logoColor=000000)](https://app.binance.com/uni-qr/Eq1ji9Ys)
 
 ## Author
 
