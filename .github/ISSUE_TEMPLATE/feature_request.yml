@@ -1,0 +1,27 @@
+name: Feature request
+description: Suggest an improvement to the focused public TikGame demo.
+title: "[Feature] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The public demo intentionally stays focused on **EVENT → ENGINE → GAME**. Real LIVE bridges, Visual Logic Compiler, Economy, SDK packaging and private production systems are outside this repository.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or opportunity
+      description: What would become clearer, faster or more useful?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+      description: Describe the smallest useful implementation.
+    validations:
+      required: true
+  - type: textarea
+    id: value
+    attributes:
+      label: Why it improves the showcase
+      description: Explain the benefit for users, viewers or contributors.
