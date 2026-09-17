@@ -26,6 +26,9 @@ jobs:
         with:
           node-version: 22
 
+      - name: Pin stable npm
+        run: npm install -g npm@11.19.1
+
       - name: Install
         run: npm install
 
