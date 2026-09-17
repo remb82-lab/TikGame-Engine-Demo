@@ -1,0 +1,428 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#050713" />
+  <title>TikGame Living World</title>
+  <style>
+    :root { color-scheme: dark; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: #02030a; }
+    body { display: grid; place-items: center; }
+    #stage { position: relative; width: 100vw; height: 100vh; overflow: hidden; background: radial-gradient(circle at 50% 25%, #15244a 0%, #080b1d 38%, #02030a 78%); }
+    canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+    .vignette { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at center, transparent 42%, rgba(0,0,0,.3) 78%, rgba(0,0,0,.72) 100%); }
+    .hud { position: absolute; inset: 0; padding: clamp(18px, 3vh, 48px) clamp(18px, 4vw, 54px); display: flex; flex-direction: column; justify-content: space-between; pointer-events: none; }
+    .top { display: grid; gap: 14px; }
+    .brand { display:flex; align-items:center; justify-content:space-between; gap:16px; text-transform:uppercase; letter-spacing:.12em; font-weight:900; text-shadow:0 3px 18px #000; }
+    .brand b { font-size: clamp(20px, 3.7vw, 46px); }
+    .brand small { font-size: clamp(9px, 1.5vw, 16px); color:#9fb6ff; }
+    .round { display:flex; justify-content:space-between; align-items:center; border:1px solid rgba(255,255,255,.14); background:rgba(4,7,20,.58); backdrop-filter: blur(10px); padding:10px 14px; border-radius:18px; box-shadow:0 12px 30px rgba(0,0,0,.28); }
+    .round .pulse { display:inline-flex; align-items:center; gap:8px; font-size:clamp(11px,1.7vw,17px); font-weight:800; }
+    .dot { width:9px; height:9px; border-radius:999px; background:#7dffb1; box-shadow:0 0 16px #7dffb1; animation: pulse 1.2s infinite; }
+    @keyframes pulse { 50% { opacity:.35; transform:scale(.72); } }
+    .timer { font-variant-numeric: tabular-nums; font-weight:1000; font-size:clamp(18px,3vw,34px); }
+    .scores { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .team { position:relative; overflow:hidden; min-height:86px; border:1px solid rgba(255,255,255,.14); border-radius:22px; background:rgba(4,7,20,.68); backdrop-filter:blur(12px); padding:14px 16px; box-shadow:0 14px 34px rgba(0,0,0,.28); }
+    .team::before { content:""; position:absolute; inset:auto 0 0; height:4px; background:var(--accent); box-shadow:0 0 22px var(--accent); }
+    .team.red { --accent:#ff416c; }
+    .team.blue { --accent:#38bdf8; text-align:right; }
+    .team span { display:block; opacity:.72; font-size:clamp(10px,1.5vw,15px); font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+    .team strong { display:block; margin-top:2px; font-size:clamp(30px,6vw,70px); line-height:1; font-weight:1000; text-shadow:0 0 28px color-mix(in srgb, var(--accent) 66%, transparent); }
+    .team em { font-style:normal; font-size:clamp(9px,1.4vw,14px); opacity:.72; }
+    .bottom { display:grid; gap:12px; }
+    .event { justify-self:center; max-width:92%; text-align:center; padding:10px 16px; border-radius:999px; border:1px solid rgba(255,255,255,.15); background:rgba(4,7,20,.68); backdrop-filter:blur(10px); font-weight:900; font-size:clamp(12px,2vw,21px); letter-spacing:.035em; box-shadow:0 12px 30px rgba(0,0,0,.3); transition:transform .18s ease, opacity .18s ease; }
+    .event.pop { transform:scale(1.05); }
+    .cta { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .cta div { border:1px solid rgba(255,255,255,.12); background:rgba(5,8,22,.7); backdrop-filter:blur(10px); border-radius:18px; padding:10px 12px; font-size:clamp(10px,1.45vw,15px); line-height:1.35; }
+    .cta b { display:block; font-size:1.08em; margin-bottom:2px; }
+    .cta .r b { color:#ff7896; } .cta .b b { color:#6fd5ff; }
+    .feed { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; min-height:26px; }
+    .chip { padding:5px 9px; border-radius:999px; background:rgba(0,0,0,.45); border:1px solid rgba(255,255,255,.1); font-size:clamp(8px,1.2vw,12px); color:#dbeafe; }
+    #controls { position:absolute; left:12px; top:50%; transform:translateY(-50%); z-index:5; display:none; width:min(260px,44vw); padding:12px; background:rgba(0,0,0,.78); border:1px solid rgba(255,255,255,.16); border-radius:16px; font-size:12px; pointer-events:auto; }
+    #controls.show { display:grid; gap:8px; }
+    #controls button { border:0; border-radius:10px; padding:9px 10px; font-weight:800; cursor:pointer; }
+    #controls input { width:100%; border-radius:10px; border:1px solid rgba(255,255,255,.2); background:#0c1024; color:#fff; padding:9px; }
+    #controls .row { display:grid; grid-template-columns:1fr 1fr; gap:7px; }
+    .safe { position:absolute; inset:3%; border:1px dashed rgba(255,255,255,.09); border-radius:24px; pointer-events:none; display:none; }
+    body.debug .safe { display:block; }
+    @media (min-aspect-ratio: 3/4) {
+      #stage { width:min(56.25vh,100vw); height:min(100vh,177.777vw); box-shadow:0 0 90px #000; }
+    }
+  </style>
+</head>
+<body>
+  <main id="stage" aria-label="TikGame Living World stream scene">
+    <canvas id="world"></canvas>
+    <div class="vignette"></div>
+    <div class="safe"></div>
+    <section class="hud">
+      <div class="top">
+        <div class="brand"><b>TIKGAME · LIVING WORLD</b><small>STREAM MODE</small></div>
+        <div class="round"><span class="pulse"><i class="dot"></i><span id="cycleLabel">МИР ЖИВЁТ</span></span><span class="timer" id="timer">01:30</span></div>
+        <div class="scores">
+          <div class="team red"><span>Красные</span><strong id="redScore">0</strong><em id="redPop">0 жителей</em></div>
+          <div class="team blue"><span>Синие</span><strong id="blueScore">0</strong><em id="bluePop">0 жителей</em></div>
+        </div>
+      </div>
+      <div class="bottom">
+        <div class="event" id="eventLabel">Кристаллический мир пробуждается</div>
+        <div class="feed" id="feed"></div>
+        <div class="cta">
+          <div class="r"><b>Напиши !red</b>Вступи в Красный клан · имя появится в мире</div>
+          <div class="b"><b>Напиши !blue</b>Вступи в Синий клан · помогай своей стороне</div>
+        </div>
+      </div>
+    </section>
+    <aside id="controls">
+      <strong>LOCAL STREAM TEST</strong>
+      <div class="row"><button data-cmd="!red">+ RED</button><button data-cmd="!blue">+ BLUE</button></div>
+      <div class="row"><button data-action="meteor">METEOR</button><button data-action="storm">STORM</button></div>
+      <div class="row"><button data-action="surge-red">RED SURGE</button><button data-action="surge-blue">BLUE SURGE</button></div>
+      <input id="chatInput" placeholder="!red / !blue / !heal red / !meteor" />
+      <button id="sendChat">SEND CHAT EVENT</button>
+      <small>OBS: открой страницу без ?controls=1. Для теста добавь ?controls=1.</small>
+    </aside>
+  </main>
+
+  <script>
+    (() => {
+      'use strict'
+      const qs = new URLSearchParams(location.search)
+      const controlsEnabled = qs.get('controls') === '1'
+      const debug = qs.get('debug') === '1'
+      if (debug) document.body.classList.add('debug')
+      const controls = document.getElementById('controls')
+      if (controlsEnabled) controls.classList.add('show')
+
+      const canvas = document.getElementById('world')
+      const ctx = canvas.getContext('2d', { alpha: false })
+      const redScoreEl = document.getElementById('redScore')
+      const blueScoreEl = document.getElementById('blueScore')
+      const redPopEl = document.getElementById('redPop')
+      const bluePopEl = document.getElementById('bluePop')
+      const timerEl = document.getElementById('timer')
+      const eventLabel = document.getElementById('eventLabel')
+      const cycleLabel = document.getElementById('cycleLabel')
+      const feedEl = document.getElementById('feed')
+
+      const TEAM = { red: '#ff416c', blue: '#38bdf8' }
+      const state = {
+        t: 0,
+        last: performance.now(),
+        cycle: 90,
+        cycleLeft: 90,
+        cycleNo: 1,
+        score: { red: 0, blue: 0 },
+        energy: { red: 0, blue: 0 },
+        agents: [], resources: [], particles: [], meteors: [], feed: [],
+        nextWorldEvent: 12,
+        stormUntil: 0,
+        winnerFlash: 0,
+        shake: 0,
+        seq: 1,
+      }
+
+      const rnd = (a, b) => a + Math.random() * (b - a)
+      const clamp = (v, a, b) => Math.max(a, Math.min(b, v))
+      const pick = arr => arr[(Math.random() * arr.length) | 0]
+      const other = team => team === 'red' ? 'blue' : 'red'
+      const names = ['Nova','Mira','Flux','Rin','Kiro','Astra','Volt','Miko','Zen','Lumi','Nox','Pico','Rune','Yuki','Echo','Rex','Ivy','Orion']
+
+      function resize() {
+        const rect = canvas.getBoundingClientRect()
+        const dpr = Math.min(window.devicePixelRatio || 1, 1.5)
+        canvas.width = Math.max(1, Math.floor(rect.width * dpr))
+        canvas.height = Math.max(1, Math.floor(rect.height * dpr))
+        ctx.setTransform(dpr,0,0,dpr,0,0)
+      }
+      addEventListener('resize', resize, { passive: true })
+      resize()
+
+      function project(x, y, z) {
+        const w = canvas.getBoundingClientRect().width
+        const h = canvas.getBoundingClientRect().height
+        const scale = Math.min(w / 42, h / 72)
+        const ox = w * 0.5
+        const oy = h * 0.50
+        return { x: ox + (x - z) * scale, y: oy + (x + z) * scale * 0.48 - y * scale * 1.25, s: scale }
+      }
+
+      function isoPoly(cx, cy, cz, rx, rz, fill, stroke) {
+        const pts = [project(cx-rx,cy,cz-rz), project(cx+rx,cy,cz-rz), project(cx+rx,cy,cz+rz), project(cx-rx,cy,cz+rz)]
+        ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y); for(let i=1;i<pts.length;i++) ctx.lineTo(pts[i].x,pts[i].y); ctx.closePath()
+        if(fill){ctx.fillStyle=fill;ctx.fill()} if(stroke){ctx.strokeStyle=stroke;ctx.stroke()}
+      }
+
+      function spawnResource(count=1) {
+        for (let i=0;i<count;i++) {
+          const ang = rnd(0, Math.PI*2), rad = rnd(4.5, 14.5)
+          state.resources.push({ id: state.seq++, x: Math.cos(ang)*rad, z: Math.sin(ang)*rad, value: rnd(1.2,3.4), pulse: rnd(0,6.28), alive:true })
+        }
+      }
+
+      function spawnAgent(team, user, boosted=false) {
+        const side = team === 'red' ? -1 : 1
+        const a = {
+          id: state.seq++, team, user: user || pick(names) + ((Math.random()*90)|0),
+          x: side * rnd(8,12), z: rnd(-5,5), vx:0, vz:0, hp:100, carry:0,
+          state:'seek', target:null, cooldown:rnd(0,.8), born:state.t,
+          boostedUntil: boosted ? state.t + 14 : 0, hue:rnd(-8,8),
+        }
+        state.agents.push(a)
+        burst(a.x, .8, a.z, TEAM[team], 14)
+        return a
+      }
+
+      function burst(x,y,z,color,count=8) {
+        for(let i=0;i<count;i++) state.particles.push({x,y,z,vx:rnd(-2,2),vy:rnd(1.1,4.5),vz:rnd(-2,2),life:rnd(.4,1.2),max:1.2,color})
+      }
+
+      function addFeed(text, team) {
+        state.feed.unshift({text, team, until:state.t+7})
+        state.feed = state.feed.slice(0,4)
+        feedEl.innerHTML = state.feed.map(f => `<span class="chip" style="border-color:${f.team ? TEAM[f.team]+'66' : 'rgba(255,255,255,.1)'}">${escapeHtml(f.text)}</span>`).join('')
+      }
+      function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c])) }
+
+      function announce(text) {
+        eventLabel.textContent = text
+        eventLabel.classList.add('pop')
+        setTimeout(() => eventLabel.classList.remove('pop'), 180)
+      }
+
+      function resetCycle() {
+        const winner = state.score.red === state.score.blue ? 'Ничья миров' : (state.score.red > state.score.blue ? 'Красный клан удержал ядро' : 'Синий клан удержал ядро')
+        announce(winner + ' · новый цикл начинается')
+        state.winnerFlash = 2.5
+        state.cycleNo++
+        state.cycleLeft = state.cycle
+        state.score.red = 0; state.score.blue = 0
+        state.energy.red = 0; state.energy.blue = 0
+        state.resources.length = 0
+        state.meteors.length = 0
+        spawnResource(18)
+        while(state.agents.length > 26) state.agents.splice((Math.random()*state.agents.length)|0,1)
+        for(const a of state.agents){a.hp=100;a.carry=0;a.state='seek'}
+      }
+
+      function worldEvent(type) {
+        if (!type) type = pick(['meteor','storm','resource','surge-red','surge-blue'])
+        if (type === 'meteor') {
+          announce('МЕТЕОРИТНЫЙ ДОЖДЬ · мир меняется')
+          for(let i=0;i<8;i++) state.meteors.push({x:rnd(-13,13),z:rnd(-13,13),y:rnd(14,28),vy:rnd(-17,-12),team:null})
+        } else if (type === 'storm') {
+          state.stormUntil = state.t + 8
+          announce('ЭНЕРГОШТОРМ · скорость мира ×1.6')
+        } else if (type === 'resource') {
+          spawnResource(12); announce('КРИСТАЛЛИЧЕСКИЙ ВСПЛЕСК · ресурсы появились')
+        } else if (type === 'surge-red' || type === 'surge-blue') {
+          const team = type.endsWith('red') ? 'red':'blue'
+          for(const a of state.agents) if(a.team===team) a.boostedUntil=state.t+10
+          state.energy[team]+=16
+          burst(team==='red'?-9:9,2,0,TEAM[team],35)
+          announce((team==='red'?'КРАСНЫЙ':'СИНИЙ') + ' ИМПУЛЬС · жители ускорены')
+        }
+      }
+
+      function damageAgent(a, amount, attackerTeam) {
+        a.hp -= amount
+        burst(a.x,.45,a.z,TEAM[a.team],4)
+        if(a.hp<=0){
+          state.score[attackerTeam] += 4
+          a.hp=100; a.carry=0; a.x=(a.team==='red'?-1:1)*rnd(9,12); a.z=rnd(-6,6); a.state='seek';
+          burst(a.x,1,a.z,TEAM[a.team],12)
+        }
+      }
+
+      function chooseTarget(a) {
+        if(a.carry >= 4.5){ a.state='home'; a.target={x:a.team==='red'?-11:11,z:0}; return }
+        const enemy = state.agents.filter(b=>b.team!==a.team && Math.hypot(b.x-a.x,b.z-a.z)<5.2).sort((p,q)=>Math.hypot(p.x-a.x,p.z-a.z)-Math.hypot(q.x-a.x,q.z-a.z))[0]
+        if(enemy && Math.random()<.32){ a.state='fight'; a.target=enemy; return }
+        const resource = state.resources.filter(r=>r.alive).sort((p,q)=>Math.hypot(p.x-a.x,p.z-a.z)-Math.hypot(q.x-a.x,q.z-a.z))[0]
+        if(resource){ a.state='seek'; a.target=resource; return }
+        a.state='wander'; a.target={x:rnd(-10,10),z:rnd(-10,10)}
+      }
+
+      function updateAgents(dt) {
+        const speedMul = state.t < state.stormUntil ? 1.6 : 1
+        for(const a of state.agents){
+          a.cooldown -= dt
+          if(!a.target || Math.random()<dt*.18) chooseTarget(a)
+          let tx=a.target?.x ?? 0, tz=a.target?.z ?? 0
+          if(a.state==='fight' && a.target){
+            if(a.target.team===a.team){ chooseTarget(a); continue }
+            tx=a.target.x; tz=a.target.z
+            const d=Math.hypot(tx-a.x,tz-a.z)
+            if(d<1.15 && a.cooldown<=0){ damageAgent(a.target, a.boostedUntil>state.t?18:11, a.team); a.cooldown=.55 }
+          }
+          const dx=tx-a.x, dz=tz-a.z, d=Math.hypot(dx,dz)||1
+          const boosted=a.boostedUntil>state.t ? 1.55:1
+          const sp=(2.15 + (a.state==='fight'?.55:0))*boosted*speedMul
+          a.vx += (dx/d*sp-a.vx)*Math.min(1,dt*4)
+          a.vz += (dz/d*sp-a.vz)*Math.min(1,dt*4)
+          a.x += a.vx*dt; a.z += a.vz*dt
+          a.x=clamp(a.x,-15,15);a.z=clamp(a.z,-15,15)
+          if(a.state==='seek' && a.target?.alive && d<.8){
+            a.carry += a.target.value; a.target.alive=false; burst(a.x,.5,a.z,'#c7fffd',8); chooseTarget(a)
+          }
+          if(a.state==='home' && d<1.1){
+            const gain=Math.max(1,Math.round(a.carry)); state.score[a.team]+=gain; state.energy[a.team]+=gain*.6; a.carry=0; burst(a.x,1,a.z,TEAM[a.team],10); chooseTarget(a)
+          }
+        }
+        state.resources = state.resources.filter(r=>r.alive)
+        if(state.resources.length<10 && Math.random()<dt*.9) spawnResource(1)
+      }
+
+      function updateMeteors(dt){
+        for(const m of state.meteors){
+          m.y += m.vy*dt
+          if(m.y<=0){
+            m.y=0; m.dead=true; state.shake=Math.max(state.shake,.35); burst(m.x,.2,m.z,'#ffd166',24)
+            spawnResource(2)
+            for(const a of state.agents){const d=Math.hypot(a.x-m.x,a.z-m.z); if(d<2.4) damageAgent(a, Math.max(4,28-d*9), other(a.team))}
+          }
+        }
+        state.meteors=state.meteors.filter(m=>!m.dead)
+      }
+
+      function updateParticles(dt){
+        for(const p of state.particles){p.life-=dt;p.vy-=4.6*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.z+=p.vz*dt}
+        state.particles=state.particles.filter(p=>p.life>0)
+      }
+
+      function update(dt){
+        const simDt=Math.min(dt,.04)
+        state.t += simDt
+        state.cycleLeft -= simDt
+        state.nextWorldEvent -= simDt
+        if(state.nextWorldEvent<=0){ worldEvent(); state.nextWorldEvent=rnd(12,20) }
+        if(state.cycleLeft<=0) resetCycle()
+        updateAgents(simDt); updateMeteors(simDt); updateParticles(simDt)
+        state.feed=state.feed.filter(f=>f.until>state.t)
+        state.shake=Math.max(0,state.shake-dt*1.6); state.winnerFlash=Math.max(0,state.winnerFlash-dt)
+      }
+
+      function drawGround(w,h){
+        const grd=ctx.createLinearGradient(0,0,0,h); grd.addColorStop(0,'#101a38');grd.addColorStop(.5,'#070c20');grd.addColorStop(1,'#02040e');ctx.fillStyle=grd;ctx.fillRect(0,0,w,h)
+        const shakeX=rnd(-1,1)*state.shake*10, shakeY=rnd(-1,1)*state.shake*8
+        ctx.save(); ctx.translate(shakeX,shakeY)
+        for(let r=16;r>0;r-=2){const alpha=.018+(16-r)*.0014;isoPoly(0,0,0,r,r,`rgba(38,74,115,${alpha})`,`rgba(100,160,220,.045)`) }
+        for(let i=-14;i<=14;i+=2){
+          const a=project(i,0,-14),b=project(i,0,14),c=project(-14,0,i),d=project(14,0,i)
+          ctx.strokeStyle='rgba(109,160,255,.05)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.moveTo(c.x,c.y);ctx.lineTo(d.x,d.y);ctx.stroke()
+        }
+        const core=project(0,0,0); const glow=ctx.createRadialGradient(core.x,core.y,0,core.x,core.y,Math.min(w,h)*.18);glow.addColorStop(0,'rgba(169,112,255,.18)');glow.addColorStop(1,'rgba(169,112,255,0)');ctx.fillStyle=glow;ctx.fillRect(0,0,w,h)
+        ctx.restore()
+      }
+
+      function drawStructure(x,z,team){
+        const base=project(x,0,z), top=project(x,2.8,z), s=base.s
+        ctx.save();ctx.shadowBlur=20;ctx.shadowColor=TEAM[team]
+        ctx.strokeStyle=TEAM[team];ctx.lineWidth=Math.max(2,s*.18)
+        ctx.beginPath();ctx.moveTo(base.x,base.y);ctx.lineTo(top.x,top.y);ctx.stroke()
+        ctx.fillStyle=TEAM[team];ctx.beginPath();ctx.arc(top.x,top.y,s*.42,0,Math.PI*2);ctx.fill()
+        ctx.restore()
+      }
+
+      function drawResource(r){
+        const p=project(r.x,.28+Math.sin(state.t*3+r.pulse)*.08,r.z), s=p.s
+        ctx.save();ctx.translate(p.x,p.y);ctx.rotate(Math.PI/4);ctx.shadowBlur=16;ctx.shadowColor='#95fff8';ctx.fillStyle='#bffef8';ctx.globalAlpha=.9;ctx.fillRect(-s*.22,-s*.22,s*.44,s*.44);ctx.restore()
+      }
+
+      function drawAgent(a){
+        const bob=Math.sin(state.t*6+a.id)*.08
+        const p=project(a.x,.42+bob,a.z), s=p.s, col=TEAM[a.team]
+        const r=clamp(s*.42,3.6,11)
+        ctx.save();ctx.shadowBlur=a.boostedUntil>state.t?24:12;ctx.shadowColor=col
+        ctx.fillStyle=col;ctx.beginPath();ctx.arc(p.x,p.y,r,0,Math.PI*2);ctx.fill()
+        ctx.fillStyle='#f8fbff';ctx.globalAlpha=.9;ctx.beginPath();ctx.arc(p.x-r*.18,p.y-r*.16,r*.2,0,Math.PI*2);ctx.fill()
+        if(a.carry>0){ctx.globalAlpha=1;ctx.fillStyle='#d9fffb';ctx.beginPath();ctx.arc(p.x,p.y-r*1.35,Math.max(2,r*.28),0,Math.PI*2);ctx.fill()}
+        if(a.hp<65){ctx.globalAlpha=.8;ctx.fillStyle='rgba(0,0,0,.6)';ctx.fillRect(p.x-r,p.y+r*1.3,r*2,2.5);ctx.fillStyle=col;ctx.fillRect(p.x-r,p.y+r*1.3,r*2*(a.hp/100),2.5)}
+        if(a.user && a.born+12>state.t){ctx.globalAlpha=.82;ctx.font=`700 ${Math.max(8,s*.52)}px system-ui`;ctx.textAlign='center';ctx.fillStyle='#fff';ctx.shadowBlur=8;ctx.shadowColor='#000';ctx.fillText(a.user.slice(0,15),p.x,p.y-r*1.9)}
+        ctx.restore()
+      }
+
+      function drawMeteor(m){
+        const p=project(m.x,m.y,m.z), s=p.s;ctx.save();ctx.shadowBlur=28;ctx.shadowColor='#ff8b3d';ctx.fillStyle='#ffd166';ctx.beginPath();ctx.arc(p.x,p.y,Math.max(3,s*.45),0,Math.PI*2);ctx.fill();ctx.restore()
+      }
+      function drawParticle(p){
+        const q=project(p.x,p.y,p.z);ctx.save();ctx.globalAlpha=clamp(p.life/p.max,0,1);ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(q.x,q.y,Math.max(1.5,q.s*.14),0,Math.PI*2);ctx.fill();ctx.restore()
+      }
+
+      function render(){
+        const rect=canvas.getBoundingClientRect(), w=rect.width,h=rect.height
+        drawGround(w,h)
+        ctx.save();ctx.translate(rnd(-1,1)*state.shake*6,rnd(-1,1)*state.shake*5)
+        drawStructure(-11,0,'red');drawStructure(11,0,'blue')
+        const core=project(0,1.4,0), cs=core.s;ctx.save();ctx.translate(core.x,core.y);ctx.rotate(state.t*.35);ctx.shadowBlur=30;ctx.shadowColor='#bd8cff';ctx.strokeStyle='#c9a7ff';ctx.lineWidth=2.3;ctx.strokeRect(-cs*.65,-cs*.65,cs*1.3,cs*1.3);ctx.rotate(Math.PI/4);ctx.fillStyle='rgba(168,112,255,.25)';ctx.fillRect(-cs*.52,-cs*.52,cs*1.04,cs*1.04);ctx.restore()
+        const drawables=[]
+        for(const r of state.resources) drawables.push({d:r.x+r.z,fn:()=>drawResource(r)})
+        for(const a of state.agents) drawables.push({d:a.x+a.z,fn:()=>drawAgent(a)})
+        drawables.sort((a,b)=>a.d-b.d).forEach(o=>o.fn())
+        state.meteors.forEach(drawMeteor);state.particles.forEach(drawParticle)
+        if(state.t<state.stormUntil){ctx.fillStyle=`rgba(83,127,255,${.035+.02*Math.sin(state.t*9)})`;ctx.fillRect(0,0,w,h)}
+        if(state.winnerFlash>0){ctx.fillStyle=`rgba(255,255,255,${Math.min(.18,state.winnerFlash*.06)})`;ctx.fillRect(0,0,w,h)}
+        ctx.restore()
+      }
+
+      function updateHud(){
+        redScoreEl.textContent=Math.floor(state.score.red);blueScoreEl.textContent=Math.floor(state.score.blue)
+        const rp=state.agents.filter(a=>a.team==='red').length, bp=state.agents.filter(a=>a.team==='blue').length
+        redPopEl.textContent=`${rp} жителей · энергия ${Math.floor(state.energy.red)}`
+        bluePopEl.textContent=`${bp} жителей · энергия ${Math.floor(state.energy.blue)}`
+        const sec=Math.max(0,Math.ceil(state.cycleLeft));timerEl.textContent=`${String((sec/60)|0).padStart(2,'0')}:${String(sec%60).padStart(2,'0')}`
+        cycleLabel.textContent=`ЦИКЛ ${state.cycleNo} · МИР ЖИВЁТ`
+        if(!state.feed.length) feedEl.innerHTML='<span class="chip">Жители сами добывают ресурсы, сражаются и возвращаются к ядрам</span>'
+      }
+
+      function parseComment(user, text){
+        const msg=String(text||'').trim().toLowerCase(); if(!msg) return
+        if(msg.startsWith('!red')){spawnAgent('red',user,true);state.score.red+=2;addFeed(`${user} → RED`,'red');announce(`${user} вошёл в Красный клан`);return}
+        if(msg.startsWith('!blue')){spawnAgent('blue',user,true);state.score.blue+=2;addFeed(`${user} → BLUE`,'blue');announce(`${user} вошёл в Синий клан`);return}
+        if(msg.includes('!heal')){
+          const team=msg.includes('blue')?'blue':'red';for(const a of state.agents)if(a.team===team)a.hp=Math.min(100,a.hp+28);burst(team==='red'?-10:10,1,0,TEAM[team],20);addFeed(`${user}: HEAL ${team.toUpperCase()}`,team);return
+        }
+        if(msg.includes('!meteor')){worldEvent('meteor');addFeed(`${user}: METEOR`,null);return}
+        if(msg.includes('!storm')){worldEvent('storm');addFeed(`${user}: STORM`,null);return}
+      }
+
+      function emit(event){
+        const e=event||{}
+        if(e.type==='comment') parseComment(e.user||'viewer',e.text||'')
+        else if(e.type==='like'){
+          const team=e.team==='blue'?'blue':'red', amount=clamp(Number(e.count)||1,1,100);state.energy[team]+=amount*.08;state.score[team]+=amount*.02
+        }
+        else if(e.type==='follow'){
+          const team=e.team==='blue'?'blue':'red';spawnAgent(team,e.user||'follower',true);state.energy[team]+=5;addFeed(`${e.user||'viewer'} FOLLOW`,team)
+        }
+        else if(e.type==='gift'){
+          const team=e.team==='blue'?'blue':'red', value=clamp(Number(e.value)||1,1,1000);state.energy[team]+=value;state.score[team]+=value*.55
+          if(value>=20) worldEvent(team==='red'?'surge-red':'surge-blue')
+          addFeed(`${e.user||'viewer'} GIFT +${Math.round(value)}`,team)
+        }
+        else if(e.type==='world') worldEvent(e.action)
+      }
+
+      window.TikGameLivingWorld = { emit, state, version:'1.0.0' }
+      addEventListener('message', ev => { const d=ev.data; if(d && d.source==='tikgame-live' && d.event) emit(d.event) })
+
+      for(let i=0;i<9;i++){spawnAgent('red');spawnAgent('blue')}
+      spawnResource(22)
+
+      function frame(now){
+        const dt=Math.min((now-state.last)/1000,.05);state.last=now;update(dt);render();updateHud();requestAnimationFrame(frame)
+      }
+      requestAnimationFrame(frame)
+
+      if(controlsEnabled){
+        controls.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.cmd)parseComment('local_'+((Math.random()*99)|0),b.dataset.cmd);if(b.dataset.action)worldEvent(b.dataset.action)})
+        const input=document.getElementById('chatInput'), send=document.getElementById('sendChat')
+        const sendNow=()=>{parseComment('local_viewer',input.value);input.value=''};send.addEventListener('click',sendNow);input.addEventListener('keydown',e=>{if(e.key==='Enter')sendNow()})
+        addEventListener('keydown',e=>{if(e.key==='r')parseComment('keyboard','!red');if(e.key==='b')parseComment('keyboard','!blue');if(e.key==='1')worldEvent('meteor');if(e.key==='2')worldEvent('storm')})
+      }
+    })()
+  </script>
+</body>
+</html>
