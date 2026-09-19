@@ -44,6 +44,7 @@ jobs:
       - name: Build
         run: npm run build
 
+      # Public mirror contains the full offline calculator and chunked LumFer price DB.
       - name: Bundle Stretch Ceiling Calculator
         run: |
           git clone --depth 1 https://github.com/remb82-lab/remb82-lab.git /tmp/public-pages
