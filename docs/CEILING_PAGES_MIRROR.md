@@ -12,3 +12,5 @@ Current public paths:
 The mirror includes the LumFer local browser price snapshot: 246 products, 377 price records, 23 categories.
 
 The legacy MVP service worker is intentionally retired so previously cached old screens are removed.
+
+Document stage: saved estimates now keep an immutable price snapshot and can generate three printable views: client estimate, installer sheet, and internal calculation.
