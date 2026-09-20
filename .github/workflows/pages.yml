@@ -44,7 +44,7 @@ jobs:
       - name: Build
         run: npm run build
 
-      # Public Pages mirror is intentionally separate from the private canonical repository. Mirror revision: KONTUR v3-r8-hotfix1.
+      # Public Pages mirror is intentionally separate from the private canonical repository. Mirror revision: KONTUR v3-r8-hotfix2.
       - name: Bundle Stretch Ceiling Calculator
         run: |
           git clone --depth 1 https://github.com/remb82-lab/remb82-lab.git /tmp/public-pages
