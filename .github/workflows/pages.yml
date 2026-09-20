@@ -45,13 +45,16 @@ jobs:
         run: npm run build
 
       # Public Pages mirror is intentionally separate from the private canonical repository.
-      # Production mirror: KONTUR v3-r8-hotfix2. Core-v2 gate source: public helper snapshot @ 528a85b3.
+      # /ceiling stays on the production mirror. /ceiling-core-v2-preview is isolated field QA.
       - name: Bundle Stretch Ceiling Calculator
         run: |
           git clone --depth 1 https://github.com/remb82-lab/remb82-lab.git /tmp/public-pages
           node /tmp/public-pages/pages/ceiling-core-v2-gate/tests-core-costing-v2.mjs
-          mkdir -p dist/ceiling
+          node --check /tmp/public-pages/pages/ceiling-core-v2-preview/preview.mjs
+          grep -q 'ПОТОЛКИ · v3 · core-v2' /tmp/public-pages/pages/ceiling-core-v2-preview/index.html
+          mkdir -p dist/ceiling dist/ceiling-core-v2-preview
           cp -a /tmp/public-pages/pages/stretch-ceiling/. dist/ceiling/
+          cp -a /tmp/public-pages/pages/ceiling-core-v2-preview/. dist/ceiling-core-v2-preview/
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
