@@ -44,12 +44,12 @@ jobs:
       - name: Build
         run: npm run build
 
-      # Canonical source: one calculator/public tree for web, Telegram Mini App and later VPS deployment.
+      # Public Pages mirror is intentionally separate from the private canonical repository.
       - name: Bundle Stretch Ceiling Calculator
         run: |
-          git clone --depth 1 https://github.com/remb82-lab/Stretch-Ceiling-Calculator.git /tmp/stretch-ceiling
+          git clone --depth 1 https://github.com/remb82-lab/remb82-lab.git /tmp/public-pages
           mkdir -p dist/ceiling
-          cp -a /tmp/stretch-ceiling/public/. dist/ceiling/
+          cp -a /tmp/public-pages/pages/stretch-ceiling/. dist/ceiling/
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
