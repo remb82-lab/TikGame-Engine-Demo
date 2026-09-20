@@ -48,6 +48,7 @@ jobs:
       - name: Bundle Stretch Ceiling Calculator
         run: |
           git clone --depth 1 https://github.com/remb82-lab/remb82-lab.git /tmp/public-pages
+          node /tmp/public-pages/pages/ceiling-core-v2-gate/tests-core-costing-v2.mjs
           mkdir -p dist/ceiling
           cp -a /tmp/public-pages/pages/stretch-ceiling/. dist/ceiling/
 
